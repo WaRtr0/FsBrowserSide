@@ -292,7 +292,7 @@ class FileSystem extends EventTarget {
         if (await this.#accessPath(path)) {
             for await (const [name, handle] of this.#fileSystem.entries()) {
                 this.#accessPath("/");
-                this.dispatchEvent(new CustomEvent('readable',{detail:{
+                this.dispatchEvent(new CustomEvent('data',{detail:{
                     name,
                     type : handle.kind,
                     path: path == "/" ? "/" + name : path + "/" + name
@@ -310,8 +310,8 @@ class FileSystem extends EventTarget {
             this.addEventListener('error', (e) => {
                 callback(e.detail, null);
             });
-            this.addEventListener('readable', (e) => {
-                callback(false,e.detail);
+            this.addEventListener('data', (e) => {
+                callback(false,e.data);
             });
             this.addEventListener('end', () => {
                 callback(false,null);
@@ -325,15 +325,6 @@ class FileSystem extends EventTarget {
         await this.#dirRecursive(path);
         this.dispatchEvent(new CustomEvent('end'));
     }
-
-    async test(path) {
-        if (!this.#path && await this.getAccess() === false) return false;
-        if (await this.#accessPath(path)) {
-            return this.#getFolder(this.#path);
-        }
-        return null;
-    }
-
 }
 
 const fs = new FileSystem();
