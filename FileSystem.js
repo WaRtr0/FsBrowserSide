@@ -4,7 +4,7 @@ class FileSystem extends EventTarget {
         super();
     }
 
-    #arborescence = {
+    #tree = {
         name: '',
         access: null,
         children: [],
@@ -15,11 +15,11 @@ class FileSystem extends EventTarget {
     #path = null;
 
     async getAccess() {
-        this.#arborescence.access = await window.showDirectoryPicker();
-        if (!this.#arborescence.access) return false;
-        this.#fileSystem = this.#arborescence.access;
-        this.#arborescence.length = 0;
-        this.#arborescence.children = [];
+        this.#tree.access = await window.showDirectoryPicker();
+        if (!this.#tree.access) return false;
+        this.#fileSystem = this.#tree.access;
+        this.#tree.length = 0;
+        this.#tree.children = [];
         this.#path = "/";
         return true;
     }
@@ -35,7 +35,7 @@ class FileSystem extends EventTarget {
                     access: cache,
                     children: []
                 });
-                this.#arborescence.length++;
+                this.#tree.length++;
             }
             return true;
         } catch (e) {
@@ -46,7 +46,7 @@ class FileSystem extends EventTarget {
                     access: cache,
                     children: []
                 });
-                this.#arborescence.length++;
+                this.#tree.length++;
                 return true;
             }
             return false;
@@ -66,12 +66,12 @@ class FileSystem extends EventTarget {
         if (!this.#path && await this.getAccess() === false) return false;
         if (path === "/"){
             this.#path = "/";
-            this.#fileSystem = this.#arborescence.access;
+            this.#fileSystem = this.#tree.access;
             return true;
         }
         const originalFileSystem = this.#fileSystem;
         const originalPath = this.#path;
-        this.#fileSystem = this.#arborescence.access;
+        this.#fileSystem = this.#tree.access;
         const paths = this.#parsePath(path).slice(1);
         let currentPath = "";
 
@@ -94,7 +94,7 @@ class FileSystem extends EventTarget {
 
     #getFolder(path) {
         const paths = this.#parsePath(path).slice(1);
-        let current = this.#arborescence;
+        let current = this.#tree;
         if (path == "/" || paths.length == 0) return current;
         for (let path of paths) {
             current = current.children.find(child => child.name === path);
@@ -220,7 +220,7 @@ class FileSystem extends EventTarget {
                     return false;
                 }
             }
-            this.#arborescence.length--;
+            this.#tree.length--;
             return true;
         }
         return false;
@@ -307,7 +307,7 @@ class FileSystem extends EventTarget {
                 callback(e.detail, null);
             });
             this.addEventListener('data', (e) => {
-                callback(false,e.data);
+                callback(false,e.detail);
             });
             this.addEventListener('end', () => {
                 callback(false,null);
