@@ -14,10 +14,6 @@ class FileSystem extends EventTarget {
     #fileSystem = null;
     #path = null;
 
-    get pwd()  { 
-        return this.#path;
-    }
-
     async getAccess() {
         this.#arborescence.access = await window.showDirectoryPicker();
         if (!this.#arborescence.access) return false;
