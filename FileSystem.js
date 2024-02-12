@@ -1,9 +1,111 @@
-class FileSystem extends EventTarget {
+/**
+ * @file FsBrowserSide.js
+ * @module FsBrowserSide
+ * @description
+ * This is a test file for the FileSystem class.
+ */
 
-    constructor() {
+/**
+ * class FsBrowserSide = FS to client environment
+ * adapted from `FileSystem API`
+ * 
+ * @param {Object} [options] - The options object.
+ * @param {boolean} [options.debug] - Enable or disable debug mode. When enabled, the error method will log errors to the console.
+ * @param {Function} [options.error] - The error function to use for logging errors. If not provided, the error method will log errors to the console.
+ * @param {boolean} [options.navigatorMode] - Enable or disable navigator mode. When enabled, the file system will use the navigator.storage.getDirectory method to request access to the file system.
+ * 
+ * @property {boolean} navigatorMode - The mode of the file system. When set to true, the file system will use the navigator.storage.getDirectory method to request access to the file system.
+ * @property {Object}  tree - The file system tree object.
+ * @property {Object}  fileSystem - The file system object.
+ * @property {string}  path - The current path of the file system.
+ * @property {Object}  error - The error object.
+ * 
+ * @method getAccess - Request access to the file system.
+ * @method openFileSync - Open a file synchronously.
+ * @method openFile - Open a file asynchronously.
+ * @method readFileSync - Read a file synchronously.
+ * @method readFile - Read a file asynchronously.
+ * @method writeFileSync - Write to a file synchronously.
+ * @method writeFile - Write to a file asynchronously.
+ * @method writeFileTextSync - Write text to a file synchronously.
+ * @method readFileTextSync - Read text from a file synchronously.
+ * @method readFileText - Read text from a file asynchronously.
+ * @method existsSync - Check if a file or folder exists synchronously.
+ * @method exists - Check if a file or folder exists asynchronously.
+ * @method mkdirSync - Create a directory synchronously.
+ * @method mkdir - Create a directory asynchronously.
+ * @method rmdirSync - Remove a directory synchronously.
+ * @method rmdir - Remove a directory asynchronously.
+ * @method rmSync - Remove a file or directory synchronously.
+ * @method rm - Remove a file or directory asynchronously.
+ * @method copyFileSync - Copy a file synchronously.
+ * @method copyFile - Copy a file asynchronously.
+ * @method cp - Copy a file asynchronously.
+ * @method renameSync - Rename a file or directory synchronously.
+ * @method rename - Rename a file or directory asynchronously.
+ * @method readdirSync - Read a directory synchronously.
+ * @method readdirRecursive - Read a directory recursively.
+ * 
+ * @event error - The error event.
+ * @event data - The data event.
+ * @event end - The end event.
+ * 
+ * @returns {FSClient<EventTarget>}
+ * 
+ * @example
+ * const fs = new FsClient({navigatorMode : true}); 
+ * fs.getAccess().then(access => {
+ *    if (access){
+ *          fs.mkdir('/hi', {recursive : true}, dir => {
+ *              if (dir) console.log('Directory created');
+ *              fs.readdir('/', data => {
+ *                  data.forEach(doc => {
+ *                      console.log(`${doc.type} - ${doc.name}`);
+ *                  });
+ *              });
+ *              fs.openFile('/hi/test.txt', {create : true}, async file => {
+ *                  if (file){
+ *                      fs.writeFileTextSync(file, "Hello World");
+ *                      fs.readFileText('/hi/test.txt', content => {
+ *                          console.log(`Content : ${content}`);
+ *                      });
+ *                  }
+ *              });
+ *          });
+ *      }
+ *  });
+ * 
+ * @example 
+ * const fs = new FsBrowserSide({navigatorMode : true});
+ * await fs.mkdirSync('/hi')
+ *  await fs.openFile('/hi/test.txt', { create : true}, async (file) => {
+ *      if(file){
+ *          await fs.writeFileTextSync(file, "Hello World");
+ *      }
+ *  });
+ *  fs.readdirRecursive('/',async (error, data) => {
+ *      if (error || !data) return false;
+ *      if (data?.type == 'file'){
+ *          const content = await fs.readFileTextSync(data?.path);
+ *          console.log(`File ${data?.name}\nContent :\n${content}`);
+ *      }
+ *      else{
+ *          console.log(`Folder ${data?.name}`);
+ *      }
+ *  });
+ * 
+ */
+class FsBrowserSide extends EventTarget {
+    constructor({ debug, error , navigatorMode} = { navigatorMode : false, debug : true, error: undefined }) {
         super();
+        if (!navigatorMode || navigatorMode == undefined) this.navigatorMode = false;
+        else this.navigatorMode = true;
+        if (debug || error != undefined) {
+            if (error == undefined) this.#error._send = console.error;
+            else this.#error._send = error;
+        }
+        else this.#error._send = false;
     }
-
     #tree = {
         name: '',
         access: null,
@@ -15,7 +117,15 @@ class FileSystem extends EventTarget {
     #path = null;
 
     async getAccess() {
-        this.#tree.access = await window.showDirectoryPicker();
+        if (!this.navigatorMode){
+            try{
+                this.#tree.access = await window.showDirectoryPicker();
+            }
+            catch(e){
+                return false;
+            }
+        }
+        else this.#tree.access = await navigator.storage.getDirectory();
         if (!this.#tree.access) return false;
         this.#fileSystem = this.#tree.access;
         this.#tree.length = 0;
@@ -121,7 +231,7 @@ class FileSystem extends EventTarget {
 
     async readFileSync(path) {
         if (!this.#path && await this.getAccess() === false) return false;
-        let file = typeof path == 'object' ? path : await this.#openFileSync(path, { create });
+        let file = typeof path == 'object' ? path : await this.#openFileSync(path);
         if (!file) return null;
         const contents = await file.getFile();
         return await contents.arrayBuffer();
@@ -171,6 +281,21 @@ class FileSystem extends EventTarget {
         await writable.write(data);
         await writable.close();
         return true;
+    }
+
+    async readFileTextSync(path) {
+        if (!this.#path && await this.getAccess() === false) return false;
+        let file = typeof path == 'object' ? path : await this.#openFileSync(path
+        );
+        if (!file) return null;
+        const contents = await file.getFile();
+        return await contents.text();
+    }
+
+    readFileText(path, callback) {
+        this.readFileTextSync(path).then(contents => {
+            callback(contents);
+        });
     }
 
     writeFileText(path, data, callback, { r } = { r: 'w' }) {
@@ -283,8 +408,22 @@ class FileSystem extends EventTarget {
         return false;
     }
 
+    readdir(path, callback) {
+        this.readdirSync(path).then
+        (contents => {
+            callback(contents);
+        });
+    }
+
+    /**
+     * Read a directory executed by `readdirRecursive(path)`
+     * 
+     * @async
+     * @param {string} path __Absolute Path__
+     * @returns 
+     */
     async #dirRecursive(path) {
-        if (!this.#path && await this.getAccess() === false) return false;
+        if (!this.#path && await this.getAccess() === false) return this.#error._command('access','dirRecursive');
         if (await this.#accessPath(path)) {
             for await (const [name, handle] of this.#fileSystem.entries()) {
                 this.#accessPath("/");
@@ -300,11 +439,21 @@ class FileSystem extends EventTarget {
         return true;
     }
 
-    async readDirRecursive(path,callback) {
-        if (!this.#path && await this.getAccess() === false) return false;
+    /**
+     * Read a directory recursively
+     * execute `dirRecursive(path)`
+     * 
+     * @async
+     * @param {string} path __Absolute Path__
+     * @param {RequestCallback} callback (`error` : `Object` | `boolean`, `data` : `Object` | `null`)
+     * @returns {Promise<boolean>}
+     */
+    async readdirRecursive(path,callback) {
+        if (!this.#path && await this.getAccess() === false) return this.#error._command('access','readdirRecursive', new Error().stack);
         if (callback && typeof callback === 'function'){
             this.addEventListener('error', (e) => {
                 callback(e.detail, null);
+                this.#error._command(e.detail.name, e.detail.funcName, new Error().stack);
             });
             this.addEventListener('data', (e) => {
                 callback(false,e.detail);
@@ -313,16 +462,73 @@ class FileSystem extends EventTarget {
                 callback(false,null);
             });
         }
+        else return false;
 
         if (!await this.#accessPath(path)) {
-            this.dispatchEvent(new CustomEvent('error', { detail: 'Access denied or path does not exist' }));
-            return;
+            this.dispatchEvent(new CustomEvent('error', { detail: {name : 'notExist', funcName : 'readdirRecursive' }}));
+            return false;
         }
         await this.#dirRecursive(path);
         this.dispatchEvent(new CustomEvent('end'));
+        return true;
+    }
+
+    /**
+     * Object for error handling
+     * 
+     * @property {string}   access
+     * @property {string}   notExist
+     * @property {string}   read
+     * @property {string}   write
+     * @property {string}   delete
+     * @property {string}   mkdir
+     * @property {string}   invalidPath
+     * @property {string}   permission
+     * @property {string}   fileFormat
+     * @property {string}   diskSpace
+     * @property {string}   conflict
+     * @property {Function} _send - The function used for logging errors, defaulting to `console.error`.
+     * @property {string}   _return - Controls the return type of the `_command` method; when set to 'boolean', it returns `false`, otherwise returns an error object.
+     * 
+     * @method
+     * _command Handles the construction and logging of error objects based on the provided error code and function name.
+     * @param {string} e - The error code, which corresponds to one of the object's properties.
+     * @param {string} funcName - The name of the function where the error occurred.
+     * @param {string} [stack='...'] - The error stack trace.
+     * @returns {boolean|Object} Returns `false` if `_return` is set to 'boolean', otherwise returns an error object with details of the error.
+     */
+    #error = {
+        'access' : 'The authorization request via the “getAccess()” function was not authorized or no folder was selected.',
+        'notExist' : 'Path does not exist',
+        'read' : 'Error reading the file. The file might not exist, or an issue occurred while reading.',
+        'write' : 'Error writing to the file. There might be an issue with file permissions or disk space.',
+        'delete' : 'Error deleting the file or directory. It might be in use or protected.',
+        'mkdir' : 'Error creating the directory. There might be an issue with permissions or the directory already exists.',
+        'invalidPath' : 'The provided path is invalid or contains illegal characters.',
+        'permission' : 'Insufficient permissions to perform the operation on the specified file or directory.',
+        'fileFormat' : 'Insufficient disk space to complete the operation.',
+        'diskSpace' : 'Unsupported file format or file is corrupted.',
+        'conflict' : 'Operation resulted in a conflict, such as attempting to create a file that already exists without overwrite permission.',
+        '_send' : console.error,
+        '_return' : 'boolean',
+        '_command' : function (e, funcName, stack = '...'){
+            if (e.startsWith('_')) e = 'Error';
+            const error = {
+                "type" : 'error',
+                "name" : e || 'Error',
+                "funcName" : funcName || '',
+                "details" : this?.[e] || '',
+                stack
+            };
+            if (!this._send || typeof this._send != 'function'){
+                if (this._return == 'boolean') return false;
+                return error;
+            }
+            this._send(`[${error.name}] - ${error.funcName} - ${error.details}\nStack trace: ${error.stack}`);
+            if (this._return == 'boolean') return false;
+            return error;
+        }
     }
 }
 
-const fs = new FileSystem();
-
-export default fs;
+const fs = new FsBrowserSide();
