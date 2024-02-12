@@ -2,7 +2,7 @@
  * @file FsBrowserSide.js
  * @module FsBrowserSide
  * @description
- * This is a test file for the FileSystem class.
+ * ...
  */
 
 /**
