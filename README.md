@@ -18,4 +18,4 @@
 
 ## Compatibility
 
-The library is designed with compatibility in mind; however, it's important to note the [FileSystem API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API)'s **support varies across browsers**. Users may encounter **limitations based** on their **[browser's compatibility](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API#browser_compatibility)** **with** the **[FileSystem API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API)**.
+The library is designed with compatibility in mind; however, it's important to note the FileSystem API's **support varies across browsers**. Users may encounter **limitations based** on their **[browser's compatibility](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API#browser_compatibility)** **with** the **FileSystem API**.
