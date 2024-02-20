@@ -2,7 +2,7 @@
 
 ## Overview
 
-`Fs Browser Side` is a library designed to bring **NodeJS's FileSystem (FS)** capabilities ___into___ the **client-side environment**, inspired by the robust and versatile FS module in NodeJS. This project aims to simplify interactions with the FileSystem API on the web, providing a more accessible interface for managing files and directories within the client's browser. By leveraging this library, developers can perform file operations similar to those in a server-side context, albeit within the confines of the client's permissions and browser capabilities.
+`Fs Browser Side` is a library designed to bring **NodeJS's FileSystem (FS)** capabilities ___into___ the **client-side environment**, inspired by the robust and versatile FS module in NodeJS. This project aims to **simplify interactions** with the **FileSystem API on the web**, providing a more accessible interface for managing files and directories within the client's browser. By leveraging this library, developers can perform file operations **similar** to those in a **server-side context**, albeit within the **confines of the client's permissions and browser capabilities**.
 
 ## Features
 
