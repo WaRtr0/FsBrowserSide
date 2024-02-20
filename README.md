@@ -19,3 +19,19 @@
 ## Compatibility
 
 The library is designed with compatibility in mind; however, it's important to note the FileSystem API's **support varies across browsers**. Users may encounter **limitations based** on their **[browser's compatibility](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API#browser_compatibility)** **with** the **FileSystem API**.
+
+## But what is it for?
+
+But what use can it serve? These tasks can indeed be accomplished on the server side through simple upload and download operations...
+
+Precisely, this allows you to **reduce server dependencies**! It enables users to perform complex file management tasks directly within their browser. This provides the opportunity to innovate web applications that are less reliant on a server, with better confidentiality...
+
+**Here are some possibilities :**
+
+- **Custom Content Management System:** Tailor and manage your digital content directly in the browser.
+- **Browser-Based IDE:** Develop and test code entirely within your web browser.
+- **Online Photoshop Alternative:** Edit images online with comprehensive tools.
+- **Advanced Online Download Manager:** Or even a file backup and synchronization solution.
+- **Client-Side Semi-Scraping Extension:** Extract and process web data on the fly.
+- **Offline Cache System:** Access your files and work offline without a hitch.
+- **Photo Album Organizer:** Curate and manage your photo collections with ease.
