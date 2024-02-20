@@ -1,6 +1,6 @@
 # Fs Browser Side
 
-> [!experimental]
+> [!warning]
 > test
 
 ## Overview
