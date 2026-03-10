@@ -196,7 +196,7 @@ The library requires browser support for the [File System Access API](https://de
 
 ## Use Cases
 
-- **Browser-Based IDE** — Read and write project files directly.
+- **Browser-Based IDE** — Read and write project files directly. [Sample](https://github.com/WaRtr0/mini-Vscode)
 - **Custom CMS** — Manage content files without a server.
 - **Offline-first apps** — Persistent storage via OPFS.
 - **Client-side scraping** — Save processed data to local files.
