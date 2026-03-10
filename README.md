@@ -2,36 +2,206 @@
 
 # Fs Browser Side
 
-> [!warning]
-> This library is currently under development and is **not recommended** for ***use*** in **production environments**!!! Contributions are welcome to improve its functionality and stability.
-
 ## Overview
 
-`Fs Browser Side` is a library designed to bring **[NodeJS's FileSystem (FS)](https://nodejs.org/api/fs.html)** capabilities ___into___ the **client-side environment**, inspired by the robust and versatile [FS](https://nodejs.org/api/fs.html) module in NodeJS. This project aims to **simplify interactions** with the **[FileSystem API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API) on the web**, providing a more accessible interface for managing files and directories within the client's browser. By leveraging this library, developers can perform file operations **similar** to those in a **server-side context**, within the **confines of the client's permissions and browser capabilities**.
+`Fs Browser Side` is a TypeScript library that brings **[Node.js FileSystem (fs)](https://nodejs.org/api/fs.html)** capabilities into the **client-side environment**, built on top of the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API). It provides a clean, promise-based interface for managing files and directories within the browser.
 
 ## Features
 
-- **FileSystem API Simplification:** Offers a simplified, user-friendly interface for the [FileSystem API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API), making it easier to perform file operations on the client side.
-- **Multi-Folder Management:** Allows the instantiation of multiple FS classes, enabling the management of multiple folders simultaneously.
-- **NodeJS FS Commands Adaptation:** Implements a multitude of commands similar to NodeJS's FS module, adapted for browser compatibility.
-- **Secure Folder Access:** Ensures secure access to the file system, requiring users to grant permission for reading and writing operations in selected folders.
+- **Promise-first API** — All methods return `Promise` by default, with optional error-first callbacks.
+- **Stateless path resolution** — No mutable internal state; concurrent operations are safe.
+- **Robust path handling** — Proper normalization with `.`, `..`, and `//` support.
+- **Idiomatic errors** — `FsError` extends `Error` with typed error codes.
+- **AsyncGenerator for recursive reads** — `readdirRecursive` yields entries lazily via `for await...of`.
+- **Two access modes** — User-picked directory (`showDirectoryPicker`) or OPFS (`navigator.storage`).
+
+## Installation
+
+```bash
+pnpm add fs-browser-side
+```
+
+## Quick Start
+
+```typescript
+import { FsBrowserSide } from 'fs-browser-side';
+
+const fs = new FsBrowserSide();
+
+// Request access to a user-selected directory
+if (await fs.getAccess()) {
+    // Create nested directories
+    await fs.mkdir('/project/src', { recursive: true });
+
+    // Write a text file
+    await fs.writeFileText('/project/src/index.ts', 'console.log("hello");');
+
+    // Read it back
+    const content = await fs.readFileText('/project/src/index.ts');
+    console.log(content); // 'console.log("hello");'
+
+    // List directory contents
+    const entries = await fs.readdir('/project/src');
+    console.log(entries);
+    // [{ name: 'index.ts', type: 'file', path: '/project/src/index.ts' }]
+}
+```
+
+### OPFS Mode (Origin Private File System)
+
+```typescript
+const fs = new FsBrowserSide({ navigatorMode: true });
+await fs.getAccess(); // No user prompt needed
+```
+
+## API Reference
+
+### `new FsBrowserSide(options?)`
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `navigatorMode` | `boolean` | `false` | Use OPFS instead of `showDirectoryPicker` |
+
+### `getAccess(): Promise<boolean>`
+
+Request file system access. Returns `true` on success.
+
+### `readFile(path): Promise<ArrayBuffer>`
+
+Read a file as an `ArrayBuffer`.
+
+### `readFileText(path): Promise<string>`
+
+Read a file as a UTF-8 string.
+
+### `writeFile(path, data, options?): Promise<void>`
+
+Write binary data to a file. Creates the file and parent directories if needed.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `append` | `boolean` | `false` | Append to existing content |
+
+### `writeFileText(path, data, options?): Promise<void>`
+
+Write a string to a file. Same options as `writeFile`.
+
+### `exists(path): Promise<boolean>`
+
+Check if a file or directory exists at the given path.
+
+### `mkdir(path, options?): Promise<void>`
+
+Create a directory.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `recursive` | `boolean` | `false` | Create parent directories as needed |
+
+### `rmdir(path, options?): Promise<void>`
+
+Remove a directory. Fails if non-empty unless `recursive` is `true`.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `recursive` | `boolean` | `false` | Remove contents recursively |
+
+### `rm(path, options?): Promise<void>`
+
+Remove a file or directory entry.
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `recursive` | `boolean` | `false` | Remove directory contents recursively |
+
+### `copyFile(src, dest): Promise<void>`
+
+Copy a file from `src` to `dest`.
+
+### `rename(src, dest): Promise<void>`
+
+Move/rename a file (copy + remove).
+
+### `readdir(path): Promise<DirEntry[]>`
+
+List entries in a directory. Each `DirEntry` has `name`, `type` (`'file'` | `'directory'`), and `path`.
+
+### `readdirRecursive(path): AsyncGenerator<DirEntry>`
+
+Recursively yield all entries under a directory:
+
+```typescript
+for await (const entry of fs.readdirRecursive('/')) {
+    console.log(entry.type, entry.path);
+}
+```
+
+### Callback Style
+
+Every method also accepts an error-first callback as last argument:
+
+```typescript
+fs.readFileText('/file.txt', (err, content) => {
+    if (err) {
+        console.error(err.code, err.path);
+        return;
+    }
+    console.log(content);
+});
+```
+
+## Error Handling
+
+All errors are instances of `FsError` with a typed `code`:
+
+```typescript
+import { FsError } from 'fs-browser-side';
+
+try {
+    await fs.readFile('/missing.txt');
+} catch (err) {
+    if (err instanceof FsError) {
+        console.log(err.code); // 'NOT_FOUND'
+        console.log(err.path); // '/missing.txt'
+    }
+}
+```
+
+| Code | Description |
+|---|---|
+| `NO_ACCESS` | File system access not granted |
+| `NOT_FOUND` | Path does not exist |
+| `ALREADY_EXISTS` | Path already exists |
+| `PERMISSION_DENIED` | Insufficient permissions |
+| `INVALID_PATH` | Invalid path (e.g. resolves above root) |
+| `NOT_A_DIRECTORY` | Expected a directory |
+| `NOT_A_FILE` | Expected a file |
+| `UNKNOWN` | Unexpected error |
+
+## Path Utilities
+
+```typescript
+import { PathUtils } from 'fs-browser-side';
+
+PathUtils.normalize('//a/./b/../c');  // '/a/c'
+PathUtils.dirname('/a/b/c');          // '/a/b'
+PathUtils.basename('/a/b/c');         // 'c'
+PathUtils.join('/a', 'b', '../c');    // '/a/c'
+PathUtils.segments('/a/b/c');         // ['a', 'b', 'c']
+```
 
 ## Compatibility
 
-The library is designed with compatibility in mind; however, it's important to note the FileSystem API's **support varies across browsers**. Users may encounter **limitations based** on their **[browser's compatibility](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API#browser_compatibility)** **with** the **FileSystem API**.
+The library requires browser support for the [File System Access API](https://developer.mozilla.org/en-US/docs/Web/API/File_System_API#browser_compatibility). OPFS mode (`navigatorMode: true`) has broader compatibility than `showDirectoryPicker`.
 
-## But what is it for?
+## Use Cases
 
-But what use can it serve? These tasks can indeed be accomplished on the server side through simple upload and download operations...
+- **Browser-Based IDE** — Read and write project files directly.
+- **Custom CMS** — Manage content files without a server.
+- **Offline-first apps** — Persistent storage via OPFS.
+- **Client-side scraping** — Save processed data to local files.
+- **Photo/file organizer** — Manage user files in the browser.
 
-Precisely, this allows you to **reduce server dependencies**! It enables users to perform complex file management tasks directly within their browser. This provides the opportunity to innovate web applications that are less reliant on a server, with better confidentiality...
+## License
 
-**Here are some possibilities :**
-
-- **Custom Content Management System:** Tailor and manage your digital content directly in the browser.
-- **Browser-Based IDE:** Develop and test code entirely within your web browser.
-- **Online Photoshop Alternative:** Edit images online with comprehensive tools.
-- **Advanced Online Download Manager:** Or even a file backup and synchronization solution.
-- **Client-Side Semi-Scraping Extension:** Extract and process web data on the fly.
-- **Offline Cache System:** Access your files and work offline without a problem.
-- **Photo Album Organizer:** Curate and manage your photo collections with ease.
+MIT
