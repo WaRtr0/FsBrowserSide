@@ -404,4 +404,14 @@ export class FsBrowserSide {
             }
         }
     }
+
+    // -- clear ----------------------------------------------------------------
+
+    async clear(): Promise<void> {
+        const root = this.ensureAccess();
+        // @ts-expect-error entries() exists on FileSystemDirectoryHandle
+        for await (const [name] of root.entries()) {
+            await root.removeEntry(name, { recursive: true });
+        }
+    }
 }
