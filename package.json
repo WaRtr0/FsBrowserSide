@@ -1,0 +1,42 @@
+{
+  "name": "fs-browser-side",
+  "version": "2.0.0",
+  "author": "Maxence Morot",
+  
+  "description": "NodeJS-like FileSystem API for the browser, built on the File System Access API",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "filesystem",
+    "browser",
+    "fs",
+    "file-system-access-api",
+    "client-side"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/WaRtr0/FsBrowserSide"
+  },
+  "bugs": {
+    "url": "https://github.com/WaRtr0/FsBrowserSide/issues"
+  }
+}
