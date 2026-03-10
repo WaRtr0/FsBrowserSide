@@ -1,6 +1,6 @@
 {
   "name": "fs-browser-side",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": "Maxence Morot <contact@maxencem.dev> (https://github.com/WaRtr0)",
   "description": "NodeJS-like FileSystem API for the browser, built on the File System Access API",
   "type": "module",
