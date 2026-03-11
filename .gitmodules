@@ -1,0 +1,3 @@
+[submodule "examples/mini-vscode"]
+	path = examples/mini-vscode
+	url = https://github.com/WaRtr0/mini-vscode
