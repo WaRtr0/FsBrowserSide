@@ -196,12 +196,16 @@ The library requires browser support for the [File System Access API](https://de
 
 ## Use Cases
 
-- **Browser-Based IDE** — Read and write project files directly. [Sample](https://github.com/WaRtr0/mini-Vscode)
+- **Browser-Based IDE** — Read and write project files directly. [Demo](https://wartr0.github.io/mini-vscode/) [Github](https://github.com/WaRtr0/mini-Vscode)
 - **Custom CMS** — Manage content files without a server.
 - **Offline-first apps** — Persistent storage via OPFS.
 - **Client-side scraping** — Save processed data to local files.
 - **Photo/file organizer** — Manage user files in the browser.
 
+## Contributing
+
+You are completely free to contribute to this project! It would be my pleasure to review and accept your *Pull Requests* or *Issues* to improve this package.
+
 ## License
 
-MIT
+This project is licensed under the MIT License.
